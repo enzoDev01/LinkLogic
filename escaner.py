@@ -59,7 +59,7 @@ def generar_reporte(ruta_boveda, lista_huerfanas):
     # (Le pongo "00_" adelante para que aparezca arriba de todo en tu lista de carpetas)
     
     try:
-        # Abrimos en modo 'w' (write). Si el archivo no existe, lo crea. Si ya existe, lo sobrescribe (¡ideal para actualizar el reporte!)
+        # Abrimos en modo 'w' (write). Si el archivo no existe, lo crea. Si ya existe, lo sobrescribe
         with open(ruta_reporte, 'w', encoding='utf-8') as archivo:
             # Escribimos el título y una pequeña descripción
             archivo.write("# 📝 Reporte de Notas Huérfanas\n\n")
@@ -93,3 +93,4 @@ if __name__ == '__main__':
     notas_solitarias = detectar_huerfanas(grafo)
     # 4. Salida (Módulo D)
     generar_reporte(MI_BOVEDA_PRUEBA, notas_solitarias)
+
