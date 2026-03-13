@@ -47,36 +47,76 @@ def detectar_huerfanas(grafo):
             
     return huerfanas
 
+def buscar_sugerencias(ruta_boveda, lista_huerfanas):
+    """
+    Busca el nombre de las notas huérfanas dentro del texto de todas las demás notas.
+    Devuelve un diccionario: {huerfana: [nota_sugerida1, nota_sugerida2]}
+    """
+    # Preparamos un diccionario vacío para guardar las sugerencias
+    sugerencias = {}
+    for huerfana in lista_huerfanas:
+        sugerencias[huerfana] = []
+
+    directorio_base = Path(ruta_boveda)
+    todas_las_notas = list(directorio_base.rglob('*.md'))
+
+    for ruta_nota in todas_las_notas:
+        nombre_actual = ruta_nota.stem
+
+        try:
+            # Abrimos la nota y pasamos todo su contenido a minúsculas
+            with open(ruta_nota, 'r', encoding='utf-8') as archivo:
+                contenido_limpio = archivo.read().lower()
+
+            # Revisamos si alguna de las huérfanas es mencionada en este texto
+            for huerfana in lista_huerfanas:
+                # 1. No queremos que una nota se sugiera a sí misma
+                if huerfana != nombre_actual:
+                    # 2. Pasamos la huérfana a minúscula y buscamos si está en el texto
+                    if huerfana.lower() in contenido_limpio:
+                        sugerencias[huerfana].append(nombre_actual)
+
+        except Exception as e:
+            print(f"Error al leer {nombre_actual} para buscar sugerencias: {e}")
+
+    return sugerencias
+
 # --- NUEVA FUNCIÓN (Módulo D) ---
-def generar_reporte(ruta_boveda, lista_huerfanas):
+def generar_reporte(ruta_boveda, lista_huerfanas, mapa_sugerencias):
     """
     Crea un archivo Markdown en la bóveda con la lista de notas huérfanas
-    usando el formato de tareas (checkboxes) de Obsidian.
+    y sus posibles conexiones sugeridas.
     """
-    # Usamos pathlib para unir la ruta de la carpeta con el nombre del nuevo archivo
     directorio_base = Path(ruta_boveda)
     ruta_reporte = directorio_base / "00_Reporte_Huerfanas.md" 
-    # (Le pongo "00_" adelante para que aparezca arriba de todo en tu lista de carpetas)
     
     try:
-        # Abrimos en modo 'w' (write). Si el archivo no existe, lo crea. Si ya existe, lo sobrescribe
         with open(ruta_reporte, 'w', encoding='utf-8') as archivo:
-            # Escribimos el título y una pequeña descripción
             archivo.write("# 📝 Reporte de Notas Huérfanas\n\n")
             archivo.write("Las siguientes notas no reciben ningún enlace. ¡Es un buen momento para conectarlas!\n\n")
             
-            # Si no hay huérfanas, damos buenas noticias
             if not lista_huerfanas:
                 archivo.write("¡Felicidades! Todas tus notas están conectadas.\n")
             else:
-                # Ordenamos la lista alfabéticamente para que sea más fácil de leer
                 lista_huerfanas.sort()
                 
-                # Escribimos cada nota con el formato de checkbox y enlace de Obsidian
                 for nota in lista_huerfanas:
-                    archivo.write(f"- [ ] [[{nota}]]\n")
+                    # 1. Escribimos la base del checkbox
+                    linea = f"- [ ] [[{nota}]]"
                     
-        print(f"\n¡Éxito! Reporte generado en: {ruta_reporte}")
+                    # 2. Buscamos si esta nota específica tiene sugerencias
+                    sugerencias_para_esta_nota = mapa_sugerencias.get(nota, [])
+                    
+                    # 3. Si tiene sugerencias, las agregamos al lado con formato de enlace
+                    if sugerencias_para_esta_nota:
+                        # Convertimos la lista ['nota2', 'nota3'] en "[[nota2]], [[nota3]]"
+                        enlaces_sugeridos = ", ".join([f"[[{s}]]" for s in sugerencias_para_esta_nota])
+                        linea += f" *(Mencionada sin enlazar en: {enlaces_sugeridos})*"
+                        
+                    # 4. Finalmente escribimos la línea completa en el archivo
+                    archivo.write(linea + "\n")
+                    
+        print(f"\n¡Éxito! Reporte con sugerencias generado en: {ruta_reporte}")
         
     except Exception as e:
         print(f"\nError al generar el reporte: {e}")
@@ -85,12 +125,11 @@ def generar_reporte(ruta_boveda, lista_huerfanas):
 if __name__ == '__main__':
     MI_BOVEDA_PRUEBA = "./boveda_prueba" 
     
-    # 1. Navegación (Módulo A)
+    # Ejecutamos la tubería (pipeline) completa:
     archivos = obtener_notas_markdown(MI_BOVEDA_PRUEBA)
-    # 2. Extracción (Módulo A)
     grafo = extraer_enlaces(archivos)
-    # 3. Lógica (Módulo B)
     notas_solitarias = detectar_huerfanas(grafo)
-    # 4. Salida (Módulo D)
-    generar_reporte(MI_BOVEDA_PRUEBA, notas_solitarias)
-
+    mapa_sugerencias = buscar_sugerencias(MI_BOVEDA_PRUEBA, notas_solitarias)
+    
+    # Generamos el reporte final inyectando las sugerencias
+    generar_reporte(MI_BOVEDA_PRUEBA, notas_solitarias, mapa_sugerencias)
