@@ -3,13 +3,31 @@ Ecosistema Personalizado en Obsidian
 
 ***
 
-## 📄 Documentación Fase 1: Escáner de Bóveda Zettelkasten (MVP)
-Descripción del Proyecto: Script desarrollado en Python diseñado para analizar una bóveda local de Obsidian, modelar sus conexiones como un grafo dirigido e identificar "notas huérfanas" (nodos con grado de entrada cero) para generar un reporte interactivo de forma nativa.
+# 🕸️ Obsidian Zettelkasten Linker & Orphan Detector
 
-### Arquitectura de Módulos (Fase 1):
+Un script de Python diseñado para auditar bóvedas locales de Obsidian. Modela el sistema de notas como un grafo dirigido para detectar nodos aislados (notas huérfanas) y realiza un análisis de texto inverso para sugerir conexiones basadas en menciones no enlazadas.
 
-_Módulo A (Navegación y Extracción)_: Utiliza la librería pathlib para recorrer recursivamente los directorios buscando archivos .md. Mediante expresiones regulares (re), extrae los enlaces internos (formato [[Nota]]) para construir un diccionario de adyacencia (el Grafo).
+## ✨ Características Principales
 
-_Módulo B (Motor Lógico)_: Implementa teoría de conjuntos (sets) y normalización de strings (minúsculas, limpieza de espacios) para aislar las notas existentes de las notas mencionadas, detectando con precisión las notas huérfanas.
+* **Escaneo Local Optimizado:** Utiliza `pathlib` para recorrer recursivamente la bóveda sin importar la estructura de carpetas.
+* **Detección de Huérfanas (O(n)):** Aplica teoría de conjuntos para identificar notas con grado de entrada cero de manera eficiente.
+* **Motor de Sugerencias:** Escanea el contenido de toda la bóveda buscando coincidencias de texto plano (*case-insensitive*) para encontrar conceptos mencionados pero no enlazados formalmente con `[[ ]]`.
+* **Integración Nativa:** Genera un archivo `00_Reporte_Huerfanas.md` directo en la bóveda usando la sintaxis de *checkbox* de Obsidian para una gestión rápida.
+* **Ejecución "One-Click":** Incluye un script `.bat` para automatizar la ejecución del reporte desde el sistema operativo.
 
-_Módulo D (Interfaz de Salida)_: Escribe automáticamente un archivo 00_Reporte_Huerfanas.md en la raíz de la bóveda, utilizando la sintaxis de checkbox de Obsidian (- [ ]) para facilitar la gestión del conocimiento por parte del usuario.
+## 🛠️ Stack Tecnológico
+
+* **Lenguaje:** Python 3
+* **Librerías Estándar:** `pathlib`, `re` (Expresiones Regulares), `os`.
+* **Entorno:** Local (Diseñado y testeado en Windows).
+
+## 🚀 Uso Rápido
+
+1. Clonar el repositorio.
+2. Editar la variable `MI_BOVEDA_REAL` dentro de `escaner.py` con la ruta absoluta a tu bóveda.
+3. Ejecutar el script por consola o mediante el acceso directo `.bat`:
+
+```bash
+python escaner.py
+
+```
